@@ -423,4 +423,4 @@ def simulate_api():
     return jsonify(simulation_results)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001) # Running on a different port than default 5000
+    app.run() # Running on a different port than default 5000
