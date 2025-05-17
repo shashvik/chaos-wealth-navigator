@@ -30,15 +30,10 @@ const formSchema = z.object({
     .max(70, { message: "Age must not exceed 70" }),
   futureAge: z.coerce.number()
     .min(19, { message: "Future age must be at least 19" })
-    .max(100, { message: "Future age must not exceed 100" })
-    .superRefine((val, ctx) => {
-      if (ctx.parent.currentAge && val <= ctx.parent.currentAge) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Future age must be greater than current age",
-        });
-      }
-    }),
+    .max(100, { message: "Future age must not exceed 100" }),
+}).refine((data) => data.futureAge > data.currentAge, {
+  message: "Future age must be greater than current age",
+  path: ["futureAge"],
 });
 
 interface SimulationFormProps {
