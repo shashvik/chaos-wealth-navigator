@@ -5,6 +5,7 @@ export interface SimulationParams {
   initialCapital: number;
   currentAge: number;
   futureAge: number;
+  luckFactor: "unlucky" | "neutral" | "lucky";
 }
 
 export interface SimulationResult {

@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { SimulationParams } from "@/types/simulation";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ const formSchema = z.object({
   futureAge: z.coerce.number()
     .min(19, { message: "Future age must be at least 19" })
     .max(100, { message: "Future age must not exceed 100" }),
+  luckFactor: z.enum(["unlucky", "neutral", "lucky"], { required_error: "Please select a luck factor" }),
 }).refine((data) => data.futureAge > data.currentAge, {
   message: "Future age must be greater than current age",
   path: ["futureAge"],
@@ -50,6 +52,7 @@ export function SimulationForm({ onSubmit, isLoading }: SimulationFormProps) {
       initialCapital: 20,
       currentAge: 26,
       futureAge: 60,
+      luckFactor: "neutral",
     },
   });
 
@@ -152,12 +155,38 @@ export function SimulationForm({ onSubmit, isLoading }: SimulationFormProps) {
                         placeholder="60" 
                         {...field} 
                         type="number" 
-                        min={Math.max(19, (form.getValues("currentAge") || 0) + 1)} 
+                        min={Math.max(19, (Number(form.getValues("currentAge")) || 0) + 1)} 
                         max={100} 
                       />
                     </FormControl>
                     <FormDescription>
                       Age to simulate until
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="luckFactor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Luck Factor</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your luck level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="unlucky">Unlucky</SelectItem>
+                        <SelectItem value="neutral">Neutral</SelectItem>
+                        <SelectItem value="lucky">Lucky</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      How lucky do you feel? This affects random events.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

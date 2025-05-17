@@ -19,6 +19,7 @@ const Index = () => {
   const [results, setResults] = useState<SimulationResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasRun, setHasRun] = useState(false);
+  const [lastParams, setLastParams] = useState<SimulationParams | null>(null);
 
   const handleSubmit = async (params: SimulationParams) => {
     setIsLoading(true);
@@ -27,6 +28,7 @@ const Index = () => {
       const data = await runSimulation(params);
       console.log("Simulation results:", data);
       setResults(data);
+      setLastParams(params); // Store the parameters used for this run
       setHasRun(true);
       toast.success("Simulation completed successfully!");
     } catch (error) {
@@ -88,11 +90,22 @@ const Index = () => {
             </section>
           ) : (
             <div className="space-y-10 animate-fade-in">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-3xl font-bold">Simulation Results</h2>
-                <Button onClick={handleNewSimulation} variant="outline">
-                  New Simulation
-                </Button>
+                <div className="flex gap-2">
+                  {lastParams && (
+                    <Button 
+                      onClick={() => handleSubmit(lastParams)} 
+                      variant="default" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Rerunning..." : "Rerun with Same Parameters"}
+                    </Button>
+                  )}
+                  <Button onClick={handleNewSimulation} variant="outline">
+                    New Simulation
+                  </Button>
+                </div>
               </div>
 
               {/* Summary Stats */}
