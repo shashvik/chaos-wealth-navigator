@@ -60,7 +60,7 @@ function StatCard({ title, value, trend, description, styleClass }: StatCardProp
         <div className="flex justify-between items-start">
           <p className="text-sm font-medium leading-none text-muted-foreground">{title}</p>
           {trend && (
-            <div className={`rounded-full p-1 ${trend === 'up' ? 'bg-profit/20 text-profit dark:text-profit-light' : 'bg-loss/20 text-loss dark:text-loss-light'}`}>
+            <div className={`rounded-full p-1 ${trend === 'up' ? 'bg-green-100 text-green-700 dark:text-green-400' : 'bg-red-100 text-red-700 dark:text-red-400'}`}>
               {trend === 'up' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
             </div>
           )}

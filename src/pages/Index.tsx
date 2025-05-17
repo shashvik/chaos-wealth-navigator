@@ -13,6 +13,7 @@ import { IncomeChart } from "@/components/simulation/IncomeChart";
 import { EventTimeline } from "@/components/simulation/EventTimeline";
 import { ResultsTable } from "@/components/simulation/ResultsTable";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
 const Index = () => {
   const [results, setResults] = useState<SimulationResult[]>([]);
@@ -22,7 +23,9 @@ const Index = () => {
   const handleSubmit = async (params: SimulationParams) => {
     setIsLoading(true);
     try {
+      console.log("Running simulation with params:", params);
       const data = await runSimulation(params);
+      console.log("Simulation results:", data);
       setResults(data);
       setHasRun(true);
       toast.success("Simulation completed successfully!");
@@ -84,7 +87,7 @@ const Index = () => {
               <SimulationForm onSubmit={handleSubmit} isLoading={isLoading} />
             </section>
           ) : (
-            <div className="space-y-10">
+            <div className="space-y-10 animate-fade-in">
               <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold">Simulation Results</h2>
                 <Button onClick={handleNewSimulation} variant="outline">
@@ -117,6 +120,16 @@ const Index = () => {
                   <li>• Inflation estimated at 6% annually</li>
                   <li>• Life events are randomly generated based on realistic probabilities</li>
                 </ul>
+              </div>
+            </div>
+          )}
+          
+          {isLoading && (
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-card p-8 rounded-lg shadow-lg border text-center">
+                <Loader className="animate-spin h-12 w-12 mx-auto mb-4 text-primary" />
+                <h3 className="font-semibold text-lg mb-2">Running Financial Simulation</h3>
+                <p className="text-muted-foreground">Calculating your financial journey...</p>
               </div>
             </div>
           )}
