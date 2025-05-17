@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,27 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Financial-specific colors
+				profit: {
+					DEFAULT: '#38A169', // green-600
+					light: '#C6F6D5', // green-200
+					dark: '#276749', // green-800
+				},
+				loss: {
+					DEFAULT: '#E53E3E', // red-600
+					light: '#FED7D7', // red-200
+					dark: '#9B2C2C', // red-800
+				},
+				saving: {
+					DEFAULT: '#3182CE', // blue-600
+					light: '#BEE3F8', // blue-200
+					dark: '#2C5282', // blue-800
+				},
+				event: {
+					DEFAULT: '#805AD5', // purple-600
+					light: '#E9D8FD', // purple-200
+					dark: '#553C9A', // purple-800
 				}
 			},
 			borderRadius: {
@@ -84,11 +106,27 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'slide-in-right': {
+					'0%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'slide-in-right': 'slide-in-right 0.3s ease-out'
 			}
 		}
 	},
