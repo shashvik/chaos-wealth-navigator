@@ -29,12 +29,12 @@ const formSchema = z.object({
     .min(18, { message: "Age must be at least 18" })
     .max(70, { message: "Age must not exceed 70" }),
   futureAge: z.coerce.number()
-    .min(z.lazy(() => formSchema.shape.currentAge.min(18).optional()))
+    .min(19, { message: "Future age must be at least 19" })
+    .max(100, { message: "Future age must not exceed 100" })
     .refine((val, ctx) => {
       const currentAge = ctx.parent.currentAge;
       return val > currentAge;
-    }, { message: "Future age must be greater than current age" })
-    .max(100, { message: "Future age must not exceed 100" }),
+    }, { message: "Future age must be greater than current age" }),
 });
 
 interface SimulationFormProps {
