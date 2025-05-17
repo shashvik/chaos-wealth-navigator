@@ -1,7 +1,7 @@
 
 import { SimulationParams, SimulationResult } from "@/types/simulation";
 
-const API_URL = '/api/simulate'; // Backend API URL
+const API_URL = '/simulate'; // Backend API URL
 
 export const runSimulation = async (params: SimulationParams): Promise<SimulationResult[]> => {
   try {
