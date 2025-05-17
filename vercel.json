@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/chaos-wealth-navigator/api/api.py" }
-  ],
-  "builds": [
-    { "src": "chaos-wealth-navigator/api/api.py", "use": "@vercel/python" }
-  ]
-}
