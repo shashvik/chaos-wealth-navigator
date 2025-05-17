@@ -17,7 +17,7 @@
   "routes": [
     {
       "src": "/api(.*)",
-      "dest": "/chaos-wealth-navigator/api/api.py",
+      "dest": "api/api.py",
       "methods": ["GET", "POST"]
     },
     {
