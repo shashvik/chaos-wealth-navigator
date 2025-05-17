@@ -10,14 +10,14 @@
       }
     },
     {
-      "src": "chaos-wealth-navigator/api.py",
+      "src": "api.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/api(.*)",
-      "dest": "chaos-wealth-navigator/api.py",
+      "src": "/api/simulate",
+      "dest": "api.py",
       "methods": ["GET", "POST"]
     },
     {
