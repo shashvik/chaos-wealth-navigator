@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "chaos-wealth-navigator/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "build": "npm run build",
@@ -10,7 +10,7 @@
       }
     },
     {
-      "src": "chaos-wealth-navigator/api/api.py",
+      "src": "api/api.py",
       "use": "@vercel/python"
     }
   ],
