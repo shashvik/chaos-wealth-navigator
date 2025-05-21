@@ -97,7 +97,7 @@ def run_financial_simulation(initial_income_param, initial_expenditure_param, in
     current_age = current_age_param
     future_age = future_age_param
 
-    years_to_simulate = future_age - current_age
+    years_to_simulate = int(future_age) - int(current_age)
     
     total_savings = initial_capital
     current_income_annual = initial_income
