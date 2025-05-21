@@ -419,9 +419,7 @@ def handle_sensitivity_analysis():
     income_max = float(data.get('income_max', 30))
     income_step = float(data.get('income_step', 5))
 
-    expenditure_min = float(data.get('expenditure_min', 2))
-    expenditure_max = float(data.get('expenditure_max', 8))
-    expenditure_step = float(data.get('expenditure_step', 1))
+
 
     capital_min = float(data.get('capital_min', 5))
     capital_max = float(data.get('capital_max', 40))
@@ -436,21 +434,31 @@ def handle_sensitivity_analysis():
     success_threshold_savings = float(data.get('success_threshold_savings', 200)) # e.g. 2 Crore
     min_success_rate_pct = float(data.get('min_success_rate_pct', 50)) # e.g. 50%
 
-    successful_combinations = []
+    all_combinations_data = [] # Renamed for clarity as it will hold all data
 
     for income in np.arange(income_min, income_max + income_step, income_step):
-        for expenditure in np.arange(expenditure_min, expenditure_max + expenditure_step, expenditure_step):
-            for capital in np.arange(capital_min, capital_max + capital_step, capital_step):
-                if expenditure >= income * 0.8: # Basic sanity check: expenditure shouldn't be too high relative to income
-                    continue
+        expenditure = income * 0.6 # Derive expenditure as 60% of income
 
-                successful_runs = 0
-                final_savings_values = []
-                for _ in range(num_simulations_per_combination):
-                    sim_results = run_financial_simulation(
-                        initial_income_param=income,
-                        initial_expenditure_param=expenditure,
-                        initial_capital_param=capital,
+        for capital in np.arange(capital_min, capital_max + capital_step, capital_step):
+            # Adjusted sanity check, if expenditure is fixed, this might always pass or need removal
+            # For now, keeping a modified check. If income is very low, expenditure could be higher than income.
+            # Consider if income * 0.6 can be >= income * 0.8. Only if income is 0 or negative.
+            # Let's assume income is positive. income * 0.6 < income * 0.8 is always true.
+            # The original check was `expenditure >= income * 0.8`. Now it's `income * 0.6 >= income * 0.8` which is false for positive income.
+            # So this check effectively does nothing if expenditure is fixed at 0.6*income. We can remove it or adjust.
+            # Let's remove it for now as expenditure is derived.
+            # if expenditure >= income * 0.8: 
+            #     continue
+
+            successful_runs = 0
+            final_savings_values = []
+            total_debt_occurrences_for_combination = 0
+
+            for _ in range(num_simulations_per_combination):
+                sim_results = run_financial_simulation(
+                    initial_income_param=income,
+                    initial_expenditure_param=expenditure, # Use derived expenditure
+                    initial_capital_param=capital,
                         current_age_param=current_age,
                         future_age_param=future_age,
                         luck_factor_param=luck_factor
@@ -462,24 +470,33 @@ def handle_sensitivity_analysis():
                         final_savings_values.append(final_savings)
                         if final_savings >= success_threshold_savings:
                             successful_runs += 1
+                        
+                        # Calculate debt occurrences for this single simulation run
+                        debt_occurrences_this_run = 0
+                        for year_data in sim_results:
+                            if year_data.get('totalSavings', 0) < 0:
+                                debt_occurrences_this_run += 1
+                        total_debt_occurrences_for_combination += debt_occurrences_this_run
                 
-                success_rate = (successful_runs / num_simulations_per_combination) * 100
+                success_rate = (successful_runs / num_simulations_per_combination) * 100 if num_simulations_per_combination > 0 else 0
                 avg_final_savings = np.mean(final_savings_values) if final_savings_values else 0
                 median_final_savings = np.median(final_savings_values) if final_savings_values else 0
+                avg_debt_occurrences = total_debt_occurrences_for_combination / num_simulations_per_combination if num_simulations_per_combination > 0 else 0
 
-                if success_rate >= min_success_rate_pct:
-                    successful_combinations.append({
-                        'initial_income': round(income, 2),
-                        'initial_expenditure': round(expenditure, 2),
-                        'initial_capital': round(capital, 2),
-                        'success_rate_pct': round(success_rate, 2),
-                        'average_final_savings': round(avg_final_savings, 2),
-                        'median_final_savings': round(median_final_savings, 2),
-                        'num_successful_runs': successful_runs,
-                        'num_total_runs': num_simulations_per_combination
-                    })
+                # Append data for all combinations
+                all_combinations_data.append({
+                    'initial_income': round(income, 2),
+                    'initial_expenditure': round(expenditure, 2), # Return derived expenditure
+                    'initial_capital': round(capital, 2),
+                    'success_rate_pct': round(success_rate, 2),
+                    'average_final_savings': round(avg_final_savings, 2),
+                    'median_final_savings': round(median_final_savings, 2),
+                    'num_successful_runs': successful_runs,
+                    'num_total_runs': num_simulations_per_combination,
+                    'average_debt_occurrences': round(avg_debt_occurrences, 2)
+                })
 
-    return jsonify(successful_combinations)
+    return jsonify(all_combinations_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
