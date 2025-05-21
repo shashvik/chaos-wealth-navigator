@@ -419,9 +419,9 @@ def handle_sensitivity_analysis():
     income_max = float(data.get('income_max', 30))
     income_step = float(data.get('income_step', 5))
 
-    expenditure_min = float(data.get('expenditure_min', 2))
-    expenditure_max = float(data.get('expenditure_max', 8))
-    expenditure_step = float(data.get('expenditure_step', 1))
+    # Expenditure is now derived from income, so these are no longer direct inputs for iteration
+    # We can define a default ratio or make it configurable if needed later
+    expenditure_to_income_ratio = data.get('expenditure_to_income_ratio', 0.2) # Default to 20% of income
 
     capital_min = float(data.get('capital_min', 5))
     capital_max = float(data.get('capital_max', 40))
@@ -436,7 +436,7 @@ def handle_sensitivity_analysis():
     success_threshold_savings = float(data.get('success_threshold_savings', 200)) # e.g. 2 Crore
     min_success_rate_pct = float(data.get('min_success_rate_pct', 50)) # e.g. 50%
 
-    successful_combinations = []
+    all_results = [] # This will store data for all combinations (income, capital)
 
     for income in np.arange(income_min, income_max + income_step, income_step):
         for expenditure in np.arange(expenditure_min, expenditure_max + expenditure_step, expenditure_step):
@@ -444,42 +444,37 @@ def handle_sensitivity_analysis():
                 if expenditure >= income * 0.8: # Basic sanity check: expenditure shouldn't be too high relative to income
                     continue
 
-                successful_runs = 0
                 final_savings_values = []
+                all_debt_incurred_years_counts = []
                 for _ in range(num_simulations_per_combination):
-                    sim_results = run_financial_simulation(
-                        initial_income_param=income,
-                        initial_expenditure_param=expenditure,
-                        initial_capital_param=capital,
-                        current_age_param=current_age,
-                        future_age_param=future_age,
-                        luck_factor_param=luck_factor
-                    )
-                    # Get the final total savings from the last year of simulation
-                    if sim_results:
-                        final_year_data = sim_results[-1]
-                        final_savings = final_year_data.get('totalSavings', 0)
-                        final_savings_values.append(final_savings)
-                        if final_savings >= success_threshold_savings:
-                            successful_runs += 1
+                    # Pass the expenditure_to_income_ratio to the simulation function
+                    # The simulation function itself will calculate the initial expenditure
+                    simulation_run_output = run_financial_simulation(income, capital, current_age, future_age, luck_factor, expenditure_to_income_ratio)
+                    final_savings_values.append(simulation_run_output['final_savings'])
+                    all_debt_incurred_years_counts.append(simulation_run_output['debt_incurred_years'])
                 
-                success_rate = (successful_runs / num_simulations_per_combination) * 100
-                avg_final_savings = np.mean(final_savings_values) if final_savings_values else 0
-                median_final_savings = np.median(final_savings_values) if final_savings_values else 0
+                num_successful_runs = sum(s >= success_threshold_savings for s in final_savings_values)
+                success_rate_pct = (num_successful_runs / num_simulations_per_combination) * 100
+                average_debt_incurred_years = np.mean(all_debt_incurred_years_counts) if all_debt_incurred_years_counts else 0
 
-                if success_rate >= min_success_rate_pct:
-                    successful_combinations.append({
-                        'initial_income': round(income, 2),
-                        'initial_expenditure': round(expenditure, 2),
-                        'initial_capital': round(capital, 2),
-                        'success_rate_pct': round(success_rate, 2),
-                        'average_final_savings': round(avg_final_savings, 2),
-                        'median_final_savings': round(median_final_savings, 2),
-                        'num_successful_runs': successful_runs,
-                        'num_total_runs': num_simulations_per_combination
-                    })
+                current_expenditure_calculated = round(income * expenditure_to_income_ratio, 2)
 
-    return jsonify(successful_combinations)
+                combination_data = {
+                    'initial_income': round(income, 2),
+                    'initial_expenditure_calculated': current_expenditure_calculated, # Store the calculated expenditure
+                    'initial_capital': round(capital, 2),
+                    'success_rate_pct': round(success_rate_pct, 2),
+                    'average_final_savings': round(np.mean(final_savings_values) if final_savings_values else 0, 2),
+                    'median_final_savings': round(np.median(final_savings_values) if final_savings_values else 0, 2),
+                    'num_successful_runs': num_successful_runs,
+                    'num_total_runs': num_simulations_per_combination,
+                    'average_debt_incurred_years': round(average_debt_incurred_years, 2)
+                }
+                all_results.append(combination_data)
+
+    # The API will now return all combinations with their debt stats, 
+    # allowing the frontend to build both the success table and the debt tipping point chart.
+    return jsonify(all_results)
 
 if __name__ == '__main__':
     app.run(debug=True)
