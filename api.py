@@ -440,9 +440,6 @@ def handle_sensitivity_analysis():
 
     for income in np.arange(income_min, income_max + income_step, income_step):
         for capital in np.arange(capital_min, capital_max + capital_step, capital_step):
-            if expenditure >= income * 0.8: # Basic sanity check: expenditure shouldn't be too high relative to income
-                continue
-
             final_savings_values = []
             all_debt_incurred_years_counts = []
             for _ in range(num_simulations_per_combination):
