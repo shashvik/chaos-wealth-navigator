@@ -5,12 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { sensitivityAnalysisService } from '@/services/sensitivityAnalysisService';
-import DebtTippingPointChart from '@/components/DebtTippingPointChart';
 
 interface SensitivityParams {
   income_min: number;
   income_max: number;
   income_step: number;
+  expenditure_min: number;
+  expenditure_max: number;
+  expenditure_step: number;
   capital_min: number;
   capital_max: number;
   capital_step: number;
@@ -24,14 +26,13 @@ interface SensitivityParams {
 
 interface SuccessfulCombination {
   initial_income: number;
-  initial_expenditure: number; // Added back as it's derived and returned by API
+  initial_expenditure: number;
   initial_capital: number;
   success_rate_pct: number;
   average_final_savings: number;
   median_final_savings: number;
   num_successful_runs: number;
   num_total_runs: number;
-  average_debt_occurrences: number; // Added new field
 }
 
 const SensitivityAnalysisPage: React.FC = () => {
@@ -39,6 +40,9 @@ const SensitivityAnalysisPage: React.FC = () => {
     income_min: 10,
     income_max: 30,
     income_step: 5,
+    expenditure_min: 2,
+    expenditure_max: 8,
+    expenditure_step: 1,
     capital_min: 5,
     capital_max: 40,
     capital_step: 5,
@@ -81,7 +85,7 @@ const SensitivityAnalysisPage: React.FC = () => {
           <CardDescription>Define the ranges for financial parameters to analyze.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.keys(params).filter(key => !key.startsWith('expenditure_')).map(key => (
+          {Object.keys(params).map(key => (
             <div key={key} className="space-y-1">
               <Label htmlFor={key} className="capitalize">{key.replace(/_/g, ' ')}</Label>
               {key === 'luck_factor' ? (
@@ -118,8 +122,7 @@ const SensitivityAnalysisPage: React.FC = () => {
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
-      {results.filter(res => res.success_rate_pct >= params.min_success_rate_pct).length > 0 && (
-        // Filter results for the table based on min_success_rate_pct
+      {results.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Successful Combinations</CardTitle>
@@ -130,7 +133,7 @@ const SensitivityAnalysisPage: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Income</TableHead>
-                  <TableHead>Expenditure (Derived)</TableHead>
+                  <TableHead>Expenditure</TableHead>
                   <TableHead>Capital</TableHead>
                   <TableHead>Success Rate (%)</TableHead>
                   <TableHead>Avg. Final Savings</TableHead>
@@ -139,10 +142,10 @@ const SensitivityAnalysisPage: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {results.filter(res => res.success_rate_pct >= params.min_success_rate_pct).map((res, index) => (
+                {results.map((res, index) => (
                   <TableRow key={index}>
                     <TableCell>{res.initial_income}L</TableCell>
-                    <TableCell>{res.initial_expenditure.toFixed(2)}L</TableCell>
+                    <TableCell>{res.initial_expenditure}L</TableCell>
                     <TableCell>{res.initial_capital}L</TableCell>
                     <TableCell>{res.success_rate_pct.toFixed(2)}%</TableCell>
                     <TableCell>{res.average_final_savings.toFixed(2)}L</TableCell>
@@ -154,10 +157,6 @@ const SensitivityAnalysisPage: React.FC = () => {
             </Table>
           </CardContent>
         </Card>
-      )}
-
-      {results.length > 0 && (
-        <DebtTippingPointChart data={results} />
       )}
     </div>
   );
