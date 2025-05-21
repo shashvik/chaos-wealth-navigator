@@ -21,6 +21,11 @@
       "methods": ["GET", "POST"]
     },
     {
+      "src": "/sensitivity_analysis",
+      "dest": "api.py",
+      "methods": ["POST"]
+    },
+    {
       "src": "/(.*)",
       "dest": "/chaos-wealth-navigator/dist/index.html"
     }

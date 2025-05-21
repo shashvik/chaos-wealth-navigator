@@ -392,25 +392,14 @@ def run_financial_simulation(initial_income_param, initial_expenditure_param, in
     return results_data
 
 @app.route('/simulate', methods=['POST'])
-def simulate_api():
+def handle_simulation():
     data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Missing JSON data'}), 400
-
-    try:
-        initial_income = float(data.get('initialIncome'))
-        initial_expenditure = float(data.get('initialExpenditure'))
-        initial_capital = float(data.get('initialCapital'))
-        current_age = int(data.get('currentAge'))
-        future_age = int(data.get('futureAge'))
-        luck_factor = data.get('luckFactor', 'neutral') # Get luck_factor, default to 'neutral'
-    except (TypeError, ValueError) as e:
-        return jsonify({'error': f'Invalid input parameter type: {e}'}), 400
-    except Exception as e:
-        return jsonify({'error': f'Error parsing parameters: {e}'}), 400
-
-    if not all([initial_income, initial_expenditure, initial_capital is not None, current_age, future_age]):
-         return jsonify({'error': 'Missing one or more required parameters: initialIncome, initialExpenditure, initialCapital, currentAge, futureAge'}), 400
+    initial_income = float(data.get('initial_income', 20))
+    initial_expenditure = float(data.get('initial_expenditure', 4))
+    initial_capital = float(data.get('initial_capital', 20))
+    current_age = int(data.get('current_age', 26))
+    future_age = int(data.get('future_age', 60))
+    luck_factor = data.get('luck_factor', 'neutral')
 
     simulation_results = run_financial_simulation(
         initial_income,
@@ -422,5 +411,75 @@ def simulate_api():
     )
     return jsonify(simulation_results)
 
+@app.route('/sensitivity_analysis', methods=['POST'])
+def handle_sensitivity_analysis():
+    data = request.get_json()
+
+    income_min = float(data.get('income_min', 10))
+    income_max = float(data.get('income_max', 30))
+    income_step = float(data.get('income_step', 5))
+
+    expenditure_min = float(data.get('expenditure_min', 2))
+    expenditure_max = float(data.get('expenditure_max', 8))
+    expenditure_step = float(data.get('expenditure_step', 1))
+
+    capital_min = float(data.get('capital_min', 5))
+    capital_max = float(data.get('capital_max', 40))
+    capital_step = float(data.get('capital_step', 5))
+
+    current_age = int(data.get('current_age', 26))
+    future_age = int(data.get('future_age', 60))
+    luck_factor = data.get('luck_factor', 'neutral')
+    
+    num_simulations_per_combination = int(data.get('num_simulations_per_combination', 10))
+    # Target savings at future_age (e.g., retirement) to be considered successful
+    success_threshold_savings = float(data.get('success_threshold_savings', 200)) # e.g. 2 Crore
+    min_success_rate_pct = float(data.get('min_success_rate_pct', 50)) # e.g. 50%
+
+    successful_combinations = []
+
+    for income in np.arange(income_min, income_max + income_step, income_step):
+        for expenditure in np.arange(expenditure_min, expenditure_max + expenditure_step, expenditure_step):
+            for capital in np.arange(capital_min, capital_max + capital_step, capital_step):
+                if expenditure >= income * 0.8: # Basic sanity check: expenditure shouldn't be too high relative to income
+                    continue
+
+                successful_runs = 0
+                final_savings_values = []
+                for _ in range(num_simulations_per_combination):
+                    sim_results = run_financial_simulation(
+                        initial_income_param=income,
+                        initial_expenditure_param=expenditure,
+                        initial_capital_param=capital,
+                        current_age_param=current_age,
+                        future_age_param=future_age,
+                        luck_factor_param=luck_factor
+                    )
+                    # Get the final total savings from the last year of simulation
+                    if sim_results:
+                        final_year_data = sim_results[-1]
+                        final_savings = final_year_data.get('totalSavings', 0)
+                        final_savings_values.append(final_savings)
+                        if final_savings >= success_threshold_savings:
+                            successful_runs += 1
+                
+                success_rate = (successful_runs / num_simulations_per_combination) * 100
+                avg_final_savings = np.mean(final_savings_values) if final_savings_values else 0
+                median_final_savings = np.median(final_savings_values) if final_savings_values else 0
+
+                if success_rate >= min_success_rate_pct:
+                    successful_combinations.append({
+                        'initial_income': round(income, 2),
+                        'initial_expenditure': round(expenditure, 2),
+                        'initial_capital': round(capital, 2),
+                        'success_rate_pct': round(success_rate, 2),
+                        'average_final_savings': round(avg_final_savings, 2),
+                        'median_final_savings': round(median_final_savings, 2),
+                        'num_successful_runs': successful_runs,
+                        'num_total_runs': num_simulations_per_combination
+                    })
+
+    return jsonify(successful_combinations)
+
 if __name__ == '__main__':
-    app.run() # Running on a different port than default 5000
+    app.run(debug=True)
