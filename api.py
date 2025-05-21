@@ -90,14 +90,14 @@ def run_financial_simulation(initial_income_param, initial_expenditure_param, in
             adjusted_value = min(upper_bound, adjusted_value)
             
         return adjusted_value
-    # Use passed parameters
-    initial_income = initial_income_param
-    initial_expenditure = initial_expenditure_param
-    initial_capital = initial_capital_param
-    current_age = current_age_param
-    future_age = future_age_param
+    # Convert types safely
+    initial_income = float(initial_income_param)
+    initial_expenditure = float(initial_expenditure_param)
+    initial_capital = float(initial_capital_param)
+    current_age = int(current_age_param)
+    future_age = int(future_age_param)
 
-    years_to_simulate = int(future_age) - int(current_age)
+    years_to_simulate = future_age - current_age
     
     total_savings = initial_capital
     current_income_annual = initial_income
